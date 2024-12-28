@@ -1,0 +1,54 @@
+import { contextBridge, ipcRenderer } from 'electron'
+import { electronAPI } from '@electron-toolkit/preload'
+
+// Custom APIs for renderer
+const api = {
+    selectFile(property) {
+        const folderPath = ipcRenderer.invoke('select-file', property)
+        return folderPath
+    },
+    // loadStar(star_name) {
+    //     ipcRenderer.send('load_star', star_name)
+    // },
+    updateStar: (data_json) => {
+        ipcRenderer.send('update_star', data_json)
+    },
+    run: (data) => {
+        ipcRenderer.send('run', data)
+    },
+    // Listen for Python stderr messages
+    onPythonStderr: (callback) => {
+        ipcRenderer.on('python-stderr', (event, data) => {
+            callback(data)
+        })
+    },
+    onPythonStdout: (callback) => {
+        ipcRenderer.on('python-stdout', (event, data) => {
+            callback(data)
+        })
+    },
+    killPython: () => {
+        ipcRenderer.send('kill-python')
+    },
+    onJson: (callback) => {
+        ipcRenderer.on('json-star', (event, data) => {
+            console.log(data)
+            callback(data)
+        })
+    }
+    // offJson: (callback) => {
+    //     ipcRenderer.removeListener('json-star', callback)
+    // }
+}
+
+if (process.contextIsolated) {
+    try {
+        contextBridge.exposeInMainWorld('electron', electronAPI)
+        contextBridge.exposeInMainWorld('api', api)
+    } catch (error) {
+        console.error(error)
+    }
+} else {
+    // window.electron = electronAPI
+    window.api = api
+}
