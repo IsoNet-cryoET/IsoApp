@@ -36,7 +36,8 @@ const DrawerPrepare = ({ open, onClose, onSubmit }) => {
         tilt_max: 60,
         tilt_step: 3,
         create_average: true,
-        number_subtomos: 1000
+        number_subtomos: 1000,
+        only_print: true
     })
 
     const handleChange = (field, value) => {
@@ -59,9 +60,10 @@ const DrawerPrepare = ({ open, onClose, onSubmit }) => {
         }))
     }
 
-    const handleSubmit = () => {
-        onSubmit(formData) // 调用父组件提供的 onSubmit 函数
-        onClose() // 关闭抽屉
+    const handleSubmit = (signal) => {
+        handleChange('only_print', signal)
+        onSubmit(formData)
+        onClose()
     }
     const handleTabChange = (event, newValue) => {
         setTabIndex(newValue)
@@ -294,9 +296,18 @@ const DrawerPrepare = ({ open, onClose, onSubmit }) => {
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit(false)}
                 >
                     Submit
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ marginTop: 2 }}
+                    onClick={() => handleSubmit(true)}
+                >
+                    Print Command
                 </Button>
             </Box>
         </Drawer>

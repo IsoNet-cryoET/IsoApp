@@ -31,7 +31,8 @@ const DrawerDeconv = ({ open, onClose, onSubmit }) => {
         // chunk_size: int=None,
         // overlap_rate: float= 0.25,
         ncpus: 4,
-        tomo_idx: 'all'
+        tomo_idx: 'all',
+        only_print: true
     })
 
     // 处理表单字段变化
@@ -47,9 +48,10 @@ const DrawerDeconv = ({ open, onClose, onSubmit }) => {
         }))
     }
 
-    const handleSubmit = () => {
-        onSubmit(formData) // 调用父组件提供的 onSubmit 函数
-        onClose() // 关闭抽屉
+    const handleSubmit = (signal) => {
+        handleChange('only_print', signal)
+        onSubmit(formData)
+        onClose()
     }
 
     return (
@@ -158,9 +160,18 @@ const DrawerDeconv = ({ open, onClose, onSubmit }) => {
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit(false)}
                 >
                     Submit
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ marginTop: 2 }}
+                    onClick={() => handleSubmit(true)}
+                >
+                    Print Command
                 </Button>
             </Box>
         </Drawer>

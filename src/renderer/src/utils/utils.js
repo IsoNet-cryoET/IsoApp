@@ -18,16 +18,12 @@ export const processMessage = (msg) => {
 }
 
 export const mergeMsg = (prevMessages, newMsg) => {
-    console.log('inside', prevMessages, newMsg)
     if (!prevMessages || prevMessages.length == 0) {
-        console.log('first')
         prevMessages = [newMsg]
         return prevMessages
     } else if (newMsg.type === 'bar' && prevMessages[prevMessages.length - 1]?.type === 'bar') {
-        console.log('second')
         return [...prevMessages.slice(0, -1), newMsg]
     } else {
-        console.log('third')
         return [...prevMessages, newMsg]
     }
 }

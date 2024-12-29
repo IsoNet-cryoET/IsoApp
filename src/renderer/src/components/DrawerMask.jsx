@@ -29,7 +29,8 @@ const DrawerMask = ({ open, onClose, onSubmit }) => {
         density_percentage: 50,
         std_percentage: 50,
         z_crop: 0.2,
-        tomo_idx: 'all'
+        tomo_idx: 'all',
+        only_print: true
     })
 
     // 处理表单字段变化
@@ -45,9 +46,10 @@ const DrawerMask = ({ open, onClose, onSubmit }) => {
         }))
     }
 
-    const handleSubmit = () => {
-        onSubmit(formData) // 调用父组件提供的 onSubmit 函数
-        onClose() // 关闭抽屉
+    const handleSubmit = (signal) => {
+        handleChange('only_print', signal)
+        onSubmit(formData)
+        onClose()
     }
 
     return (
@@ -159,9 +161,18 @@ const DrawerMask = ({ open, onClose, onSubmit }) => {
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit(false)}
                 >
                     Submit
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ marginTop: 2 }}
+                    onClick={() => handleSubmit(true)}
+                >
+                    Print Command
                 </Button>
             </Box>
         </Drawer>

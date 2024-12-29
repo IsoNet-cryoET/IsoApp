@@ -64,7 +64,8 @@ const DrawerRefine = ({ open, onClose, onSubmit }) => {
         even_odd_input: true,
         snrfalloff: 0,
         deconvstrength: 1,
-        highpassnyquist: 0.02
+        highpassnyquist: 0.02,
+        only_print: true
     })
 
     // 处理表单字段变化
@@ -80,9 +81,10 @@ const DrawerRefine = ({ open, onClose, onSubmit }) => {
         }))
     }
 
-    const handleSubmit = () => {
-        onSubmit(formData) // 调用父组件提供的 onSubmit 函数
-        onClose() // 关闭抽屉
+    const handleSubmit = (signal) => {
+        handleChange('only_print', signal)
+        onSubmit(formData)
+        onClose()
     }
 
     return (
@@ -489,9 +491,18 @@ const DrawerRefine = ({ open, onClose, onSubmit }) => {
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit(false)}
                 >
                     Submit
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ marginTop: 2 }}
+                    onClick={() => handleSubmit(true)}
+                >
+                    Print Command
                 </Button>
             </Box>
         </Drawer>

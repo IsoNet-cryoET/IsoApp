@@ -35,11 +35,6 @@ function createWindow() {
         return { action: 'deny' }
     })
 
-    // ipcMain.on('run', (_, data) => {
-    //     console.log(data)
-    //     run_python(data)
-    // })
-
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
         mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
     } else {
@@ -64,7 +59,11 @@ function toCommand(data) {
                 // Prepend the command value
                 result = `${value}${result}`
                 cmd = `${value}`
-            } else if (key === 'even_odd_input' || key == 'split_top_bottom_halves') {
+            } else if (
+                key === 'even_odd_input' ||
+                key == 'split_top_bottom_halves' ||
+                key == 'only_print'
+            ) {
                 // Do nothing for 'even_odd_input'
             } else {
                 // Append key-value pair in the format "--key value"
@@ -126,42 +125,46 @@ ipcMain.on('update_star', (event, data) => {
 
 ipcMain.on('run', (event, data) => {
     const { cmd, result } = toCommand(data)
-    console.log(`isonet.py ${result}`)
+    if (data.hasOwnProperty('only_print') && data['only_print'] === true) {
+        event.sender.send('python-stdout', { cmd: cmd, output: result })
+    } else {
+        console.log(`isonet.py ${result}`)
 
-    // Spawn the Python process
-    pythonProcess = spawn('isonet.py', [...result.split(' ')], {
-        detached: true, // Create a new process group
-        stdio: ['ignore', 'pipe', 'pipe'] // Ignore stdin, keep stdout/stderr
-    }) // Corrected the split
+        // Spawn the Python process
+        pythonProcess = spawn('isonet.py', [...result.split(' ')], {
+            detached: true, // Create a new process group
+            stdio: ['ignore', 'pipe', 'pipe'] // Ignore stdin, keep stdout/stderr
+        }) // Corrected the split
 
-    event.sender.send('python-running', { cmd: cmd, output: 'running' })
+        event.sender.send('python-running', { cmd: cmd, output: 'running' })
 
-    // Capture and print stdout in real time
-    pythonProcess.stdout.on('data', (data) => {
-        event.sender.send('python-stdout', { cmd: cmd, output: data.toString() })
-    })
+        // Capture and print stdout in real time
+        pythonProcess.stdout.on('data', (data) => {
+            event.sender.send('python-stdout', { cmd: cmd, output: data.toString() })
+        })
 
-    pythonProcess.stderr.on('data', (data) => {
-        event.sender.send('python-stderr', { cmd: cmd, output: data.toString() })
-    })
+        pythonProcess.stderr.on('data', (data) => {
+            event.sender.send('python-stderr', { cmd: cmd, output: data.toString() })
+        })
 
-    // Handle process close event
-    pythonProcess.on('close', (code) => {
-        console.log(`Python process exited with code ${code}`)
-        if (code === 0 && (cmd === 'prepare_star' || cmd === 'star2json')) {
-            fs.readFile('.to_node.json', 'utf8', (err, data) => {
-                if (err) {
-                    console.error('Error reading JSON:', err)
-                    return
-                }
-                const jsonData = data.split('\n').map((line) => JSON.parse(line)) // Parsing each line as an individual object
-                event.sender.send('json-star', { cmd: 'prepare_star', output: jsonData })
-                //console.log(jsonData) // Logs an array of objects
-            })
-        }
-        pythonProcess = null // Reset the reference when the process ends
-        event.sender.send('python-closed', { cmd: cmd, output: 'closed' })
-    })
+        // Handle process close event
+        pythonProcess.on('close', (code) => {
+            console.log(`Python process exited with code ${code}`)
+            if (code === 0 && (cmd === 'prepare_star' || cmd === 'star2json')) {
+                fs.readFile('.to_node.json', 'utf8', (err, data) => {
+                    if (err) {
+                        console.error('Error reading JSON:', err)
+                        return
+                    }
+                    const jsonData = data.split('\n').map((line) => JSON.parse(line)) // Parsing each line as an individual object
+                    event.sender.send('json-star', { cmd: 'prepare_star', output: jsonData })
+                    //console.log(jsonData) // Logs an array of objects
+                })
+            }
+            pythonProcess = null // Reset the reference when the process ends
+            event.sender.send('python-closed', { cmd: cmd, output: 'closed' })
+        })
+    }
 })
 ipcMain.on('kill-python', (event) => {
     if (pythonProcess) {

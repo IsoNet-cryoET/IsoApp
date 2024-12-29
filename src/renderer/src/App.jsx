@@ -46,6 +46,7 @@ const App = () => {
         make_mask: false,
         predict: false
     })
+    const [gpuQueue, setGpuQueue] = useState([])
 
     const [starName, setStarName] = useState('')
     // const [JsonData, setJsonData] = useState('')
@@ -104,14 +105,10 @@ const App = () => {
     useEffect(() => {
         const handleIncomingMessage = (data) => {
             let newMsg = processMessage(data)
-            console.log('newMsg', newMsg)
             if (data.cmd === 'prepare_star') {
                 setPrepareMessages((prevMessages) => mergeMsg(prevMessages, newMsg))
             } else if (data.cmd === 'refine') {
-                console.log('newMsgrefine', newMsg)
-
                 setRefineMessages((prevMessages) => mergeMsg(prevMessages, newMsg))
-                console.log('refinemessages', refineMessages)
             } else if (data.cmd === 'predict') {
                 setPredictMessages((prevMessages) => mergeMsg(prevMessages, newMsg))
             } else if (data.cmd === 'make_mask') {
