@@ -258,7 +258,7 @@ const DrawerRefine = ({ open, onClose, onSubmit }) => {
                         value={formData.mw_weight}
                         onChange={(e) => handleChange('mw_weight', e.target.value)}
                         fullWidth
-                    />{' '}
+                    />
                     <TextField
                         label="gpuID"
                         type="string"
@@ -292,7 +292,7 @@ const DrawerRefine = ({ open, onClose, onSubmit }) => {
                             />
                         }
                         label="isCTFflipped"
-                    />{' '}
+                    />
                 </Box>
 
                 {!formData.even_odd_input && (

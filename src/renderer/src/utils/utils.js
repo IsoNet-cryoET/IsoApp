@@ -18,14 +18,18 @@ export const processMessage = (msg) => {
 }
 
 export const mergeMsg = (prevMessages, newMsg) => {
-    if (!prevMessages) prevMessages = [newMsg]
-    if (newMsg.type === 'bar' && prevMessages[prevMessages.length - 1].type === 'bar') {
-        prevMessages[prevMessages.length - 1] = newMsg
-        prevMessages = [...prevMessages]
+    console.log('inside', prevMessages, newMsg)
+    if (!prevMessages || prevMessages.length == 0) {
+        console.log('first')
+        prevMessages = [newMsg]
+        return prevMessages
+    } else if (newMsg.type === 'bar' && prevMessages[prevMessages.length - 1]?.type === 'bar') {
+        console.log('second')
+        return [...prevMessages.slice(0, -1), newMsg]
     } else {
-        prevMessages = [...prevMessages, newMsg]
+        console.log('third')
+        return [...prevMessages, newMsg]
     }
-    return prevMessages
 }
 
 // export const processJson = (msg) => {

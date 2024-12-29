@@ -21,19 +21,8 @@ const PageRefine = (props) => {
                 >
                     Kill this process
                 </Button>
-                {/* <TextField
-                    label="current star file"
-                    value={props.star_name}
-                    fullWidth
-                    disabled
-                    sx={{ height: '56px' }} // Set the TextField's height to match the button
-                /> */}
             </Box>
-            {/* <IconButton onClick={handleKillPython} sx={{ color: '#14446e' }}>
-                <StopIcon />
-                Kill process
-            </IconButton> */}
-            {renderContent(props.messages, 'refine')}
+            {renderContent(props.refineMessages)}
         </div>
     )
 }

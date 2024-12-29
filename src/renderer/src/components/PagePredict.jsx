@@ -1,11 +1,8 @@
 import React from 'react'
+import { renderContent } from './log_handler'
 
-const PagePredict = () => {
-    return (
-        <div>
-            <h3>Page C</h3>
-        </div>
-    )
+const PagePredict = (props) => {
+    return <div>{renderContent(props.predictMessages)}</div>
 }
 
 export default PagePredict

@@ -15,8 +15,6 @@ import FileOpenIcon from '@mui/icons-material/FileOpen'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 
 const DataTable = ({ jsonData, star_name }) => {
-    console.log('DataTable rendered', jsonData) // Debug log
-
     if (!jsonData || jsonData.length === 0) return null
 
     const [rows, setRows] = useState(flattenData(jsonData))

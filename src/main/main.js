@@ -64,7 +64,7 @@ function toCommand(data) {
                 // Prepend the command value
                 result = `${value}${result}`
                 cmd = `${value}`
-            } else if (key === 'even_odd_input') {
+            } else if (key === 'even_odd_input' || key == 'split_top_bottom_halves') {
                 // Do nothing for 'even_odd_input'
             } else {
                 // Append key-value pair in the format "--key value"

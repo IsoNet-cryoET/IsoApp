@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react'
 import DrawerPrepare from './components/DrawerPrepare'
 import { List, ListItem, ListItemText, IconButton, ListItemButton } from '@mui/material'
 import DrawerRefine from './components/DrawerRefine'
+import DrawerPredict from './components/DrawerPredict'
+import DrawerDeconv from './components/DrawerDeconv'
+import DrawerMask from './components/DrawerMask'
+
 import EditIcon from '@mui/icons-material/Edit'
 import AppsIcon from '@mui/icons-material/Apps'
 import CameraIcon from '@mui/icons-material/Camera'
@@ -9,17 +13,29 @@ import CameraIcon from '@mui/icons-material/Camera'
 import PageRefine from './components/PageRefine'
 import PagePrepare from './components/PagePrepare'
 import PagePredict from './components/PagePredict'
+import PageMask from './components/PageMask'
+import PageDeconv from './components/PageDeconv'
+import PagePost from './components/PagePost'
 import { mergeMsg, processMessage } from './utils/utils'
+import { ConnectedTvOutlined } from '@mui/icons-material'
 
 const App = () => {
-    const [drawerOpen, setDrawerOpen] = useState(false)
-    const [drawerOpen2, setDrawerOpen2] = useState(false)
+    const [prepareDrawerOpen, setPrepareDrawerOpen] = useState(false)
+    const [refineDrawerOpen, setRefineDrawerOpen] = useState(false)
+    const [deconvDawerOpen, setDeconvDrawerOpen] = useState(false)
+    const [maskDrawerOpen, setMaskDrawerOpen] = useState(false)
+    const [predictDrawerOpen, setPredictDrawerOpen] = useState(false)
+
     const [prepareMessages, setPrepareMessages] = useState([])
     const [refineMessages, setRefineMessages] = useState([])
-    const [star_name, setStarName] = useState('')
+    const [deconvMessages, setDeconvMessages] = useState([])
+    const [maskMessages, setMaskMessages] = useState([])
+    const [predictMessages, setPredictMessages] = useState([])
+
+    const [starName, setStarName] = useState('')
     // const [JsonData, setJsonData] = useState('')
 
-    const handleSubmitApp = (data) => {
+    const handleSubmitPrepare = (data) => {
         try {
             setStarName(data.star_name)
             setPrepareMessages(() => [])
@@ -27,41 +43,76 @@ const App = () => {
         } catch (error) {
             console.error('Error submitting form:', error)
         }
-        setDrawerOpen(false)
+        setPrepareDrawerOpen(false)
     }
 
-    const handleSubmitApp2 = (data) => {
+    const handleSubmitRefine = (data) => {
         try {
             setRefineMessages(() => [])
             api.run(data)
         } catch (error) {
             console.error('Error submitting form:', error)
         }
-        setDrawerOpen2(false)
+        setRefineDrawerOpen(false)
+    }
+
+    const handleSubmitDeconv = (data) => {
+        try {
+            setDeconvMessages(() => [])
+            api.run(data)
+        } catch (error) {
+            console.error('Error submitting form:', error)
+        }
+        setDeconvDrawerOpen(false)
+    }
+
+    const handleSubmitPredict = (data) => {
+        try {
+            setPredictMessages(() => [])
+            api.run(data)
+        } catch (error) {
+            console.error('Error submitting form:', error)
+        }
+        setPredictDrawerOpen(false)
+    }
+
+    const handleSubmitMask = (data) => {
+        try {
+            setMaskMessages(() => [])
+            api.run(data)
+        } catch (error) {
+            console.error('Error submitting form:', error)
+        }
+        setMaskDrawerOpen(false)
     }
 
     useEffect(() => {
-        window.api.onPythonStderr((data) => {
+        const handleIncomingMessage = (data) => {
             let newMsg = processMessage(data)
-
-            if (data.command === 'prepare_star') {
+            console.log('newMsg', newMsg)
+            if (data.cmd === 'prepare_star') {
                 setPrepareMessages((prevMessages) => mergeMsg(prevMessages, newMsg))
-            } else if (data.command === 'refine') {
-                setRefineMessages((prevMessages) => mergeMsg(prevMessages, newMsg))
-            }
-        })
-        window.api.onPythonStdout((data) => {
-            let newMsg = processMessage(data)
+            } else if (data.cmd === 'refine') {
+                console.log('newMsgrefine', newMsg)
 
-            if (data.command === 'prepare_star') {
-                setPrepareMessages((prevMessages) => mergeMsg(prevMessages, newMsg))
-            } else if (data.command === 'refine') {
                 setRefineMessages((prevMessages) => mergeMsg(prevMessages, newMsg))
+                console.log('refinemessages', refineMessages)
+            } else if (data.cmd === 'predict') {
+                setPredictMessages((prevMessages) => mergeMsg(prevMessages, newMsg))
+            } else if (data.cmd === 'make_mask') {
+                setMaskMessages((prevMessages) => mergeMsg(prevMessages, newMsg))
+            } else if (data.cmd === 'deconv') {
+                setDeconvMessages((prevMessages) => mergeMsg(prevMessages, newMsg))
             }
-        })
-        // window.api.onJson((data) => {
-        //     setJsonData(() => data.output)
-        // })
+        }
+        window.api.onPythonStderr(handleIncomingMessage)
+        window.api.onPythonStdout(handleIncomingMessage)
+
+        // // Cleanup listeners on unmount
+        // return () => {
+        //     window.api.offPythonStderr(handleIncomingMessage)
+        //     window.api.offPythonStdout(handleIncomingMessage)
+        // }
     }, [])
 
     // selected menu index
@@ -69,7 +120,7 @@ const App = () => {
     const [selectedSecondaryMenu, setSelectedSecondaryMenu] = useState(0)
 
     const Contents = [
-        [PagePrepare, PageRefine, PagePredict],
+        [PagePrepare, PageDeconv, PageMask, PageRefine, PagePredict, PagePost],
         [null, null]
     ]
     const CurrentComponent = Contents[selectedPrimaryMenu][selectedSecondaryMenu]
@@ -132,7 +183,7 @@ const App = () => {
                                 >
                                     <ListItemText primary="Prepare" />
                                     <IconButton
-                                        onClick={() => setDrawerOpen(true)}
+                                        onClick={() => setPrepareDrawerOpen(true)}
                                         sx={{
                                             backgroundColor: '#eaf1fb', // Set the background color
                                             '&:hover': {
@@ -151,15 +202,52 @@ const App = () => {
                                     </IconButton>
                                 </ListItemButton>
                             </ListItem>
-                            <ListItem disablePadding>
+                            <ListItem
+                                disablePadding
+                                sx={{
+                                    '&:hover': { backgroundColor: '#eaebef' }
+                                }}
+                            >
                                 <ListItemButton
                                     selected={selectedSecondaryMenu === 1}
                                     sx={selectedStyle}
                                     onClick={(event) => handleSecondaryMenuClick(event, 1)}
                                 >
-                                    <ListItemText primary="Refine" />
+                                    <ListItemText primary="Deconvolve" />
                                     <IconButton
-                                        onClick={() => setDrawerOpen2(true)}
+                                        onClick={() => setDeconvDrawerOpen(true)}
+                                        sx={{
+                                            backgroundColor: '#eaf1fb', // Set the background color
+                                            '&:hover': {
+                                                backgroundColor: '#e0e0e0' // Optional: Hover effect
+                                            },
+                                            borderRadius: '50%', // Optional: Keeps the background circular
+                                            width: '40px', // Increase clickable area width
+                                            height: '40px', // Increase clickable area height
+                                            display: 'flex', // Center the icon within the button
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <EditIcon sx={{ color: '#14446e', fontSize: '24px' }} />{' '}
+                                        {/* Keep the icon size fixed */}
+                                    </IconButton>
+                                </ListItemButton>
+                            </ListItem>
+                            <ListItem
+                                disablePadding
+                                sx={{
+                                    '&:hover': { backgroundColor: '#eaebef' }
+                                }}
+                            >
+                                <ListItemButton
+                                    selected={selectedSecondaryMenu === 2}
+                                    sx={selectedStyle}
+                                    onClick={(event) => handleSecondaryMenuClick(event, 2)}
+                                >
+                                    <ListItemText primary="Create Mask" />
+                                    <IconButton
+                                        onClick={() => setMaskDrawerOpen(true)}
                                         sx={{
                                             backgroundColor: '#eaf1fb', // Set the background color
                                             '&:hover': {
@@ -180,11 +268,70 @@ const App = () => {
                             </ListItem>
                             <ListItem disablePadding>
                                 <ListItemButton
-                                    selected={selectedSecondaryMenu === 2}
+                                    selected={selectedSecondaryMenu === 3}
                                     sx={selectedStyle}
-                                    onClick={(event) => handleSecondaryMenuClick(event, 2)}
+                                    onClick={(event) => handleSecondaryMenuClick(event, 3)}
                                 >
-                                    <ListItemText primary="Step 3" />
+                                    <ListItemText primary="Refine" />
+                                    <IconButton
+                                        onClick={() => setRefineDrawerOpen(true)}
+                                        sx={{
+                                            backgroundColor: '#eaf1fb', // Set the background color
+                                            '&:hover': {
+                                                backgroundColor: '#e0e0e0' // Optional: Hover effect
+                                            },
+                                            borderRadius: '50%', // Optional: Keeps the background circular
+                                            width: '40px', // Increase clickable area width
+                                            height: '40px', // Increase clickable area height
+                                            display: 'flex', // Center the icon within the button
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <EditIcon sx={{ color: '#14446e', fontSize: '24px' }} />{' '}
+                                        {/* Keep the icon size fixed */}
+                                    </IconButton>
+                                </ListItemButton>
+                            </ListItem>
+                            <ListItem
+                                disablePadding
+                                sx={{
+                                    '&:hover': { backgroundColor: '#eaebef' }
+                                }}
+                            >
+                                <ListItemButton
+                                    selected={selectedSecondaryMenu === 4}
+                                    sx={selectedStyle}
+                                    onClick={(event) => handleSecondaryMenuClick(event, 4)}
+                                >
+                                    <ListItemText primary="Predict" />
+                                    <IconButton
+                                        onClick={() => setPredictDrawerOpen(true)}
+                                        sx={{
+                                            backgroundColor: '#eaf1fb', // Set the background color
+                                            '&:hover': {
+                                                backgroundColor: '#e0e0e0' // Optional: Hover effect
+                                            },
+                                            borderRadius: '50%', // Optional: Keeps the background circular
+                                            width: '40px', // Increase clickable area width
+                                            height: '40px', // Increase clickable area height
+                                            display: 'flex', // Center the icon within the button
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <EditIcon sx={{ color: '#14446e', fontSize: '24px' }} />{' '}
+                                        {/* Keep the icon size fixed */}
+                                    </IconButton>
+                                </ListItemButton>
+                            </ListItem>
+                            <ListItem disablePadding>
+                                <ListItemButton
+                                    selected={selectedSecondaryMenu === 5}
+                                    sx={selectedStyle}
+                                    onClick={(event) => handleSecondaryMenuClick(event, 5)}
+                                >
+                                    <ListItemText primary="Postprocess" />
                                 </ListItemButton>
                             </ListItem>
                         </List>
@@ -214,28 +361,64 @@ const App = () => {
                 </div>
                 <div className="content-area">
                     {CurrentComponent !== null ? (
-                        <CurrentComponent
-                            star_name={star_name}
-                            set_star_name={setStarName}
-                            {...(CurrentComponent === PagePrepare
-                                ? { prepareMessages, setPrepareMessages }
-                                : {})}
-                            {...(CurrentComponent === PageRefine ? { refineMessages } : {})} // Pass
-                        />
+                        (() => {
+                            // Determine props to pass based on the current component
+                            let componentProps = { starName, setStarName }
+                            if (CurrentComponent === PagePrepare) {
+                                componentProps = {
+                                    ...componentProps,
+                                    prepareMessages,
+                                    setPrepareMessages
+                                }
+                            } else if (CurrentComponent === PageRefine) {
+                                componentProps = { ...componentProps, refineMessages }
+                            } else if (CurrentComponent === PagePredict) {
+                                componentProps = { ...componentProps, predictMessages }
+                            } else if (CurrentComponent === PageMask) {
+                                componentProps = { ...componentProps, maskMessages }
+                            } else if (CurrentComponent === PageDeconv) {
+                                componentProps = { ...componentProps, deconvMessages }
+                            }
+
+                            return <CurrentComponent {...componentProps} />
+                        })()
                     ) : (
-                        <div>content is not ready</div>
+                        <iframe
+                            src="https://isonetcryoet.com/" // Replace with your desired URL
+                            style={{
+                                width: '100%',
+                                height: '100vh',
+                                border: 'none'
+                            }}
+                            title="Embedded Webpage"
+                        />
                     )}
                 </div>
 
                 <DrawerPrepare
-                    open={drawerOpen}
-                    onClose={() => setDrawerOpen(false)}
-                    onSubmit={handleSubmitApp}
+                    open={prepareDrawerOpen}
+                    onClose={() => setPrepareDrawerOpen(false)}
+                    onSubmit={handleSubmitPrepare}
                 />
                 <DrawerRefine
-                    open={drawerOpen2}
-                    onClose={() => setDrawerOpen2(false)}
-                    onSubmit={handleSubmitApp2}
+                    open={refineDrawerOpen}
+                    onClose={() => setRefineDrawerOpen(false)}
+                    onSubmit={handleSubmitRefine}
+                />
+                <DrawerDeconv
+                    open={deconvDawerOpen}
+                    onClose={() => setDeconvDrawerOpen(false)}
+                    onSubmit={handleSubmitDeconv}
+                />
+                <DrawerMask
+                    open={maskDrawerOpen}
+                    onClose={() => setMaskDrawerOpen(false)}
+                    onSubmit={handleSubmitMask}
+                />
+                <DrawerPredict
+                    open={predictDrawerOpen}
+                    onClose={() => setPredictDrawerOpen(false)}
+                    onSubmit={handleSubmitPredict}
                 />
             </div>
         </div>
