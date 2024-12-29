@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import DrawerPrepare from './components/DrawerPrepare'
-import { List, ListItem, ListItemText, IconButton, ListItemButton } from '@mui/material'
+import {
+    List,
+    ListItem,
+    ListItemText,
+    IconButton,
+    ListItemButton,
+    Backdrop,
+    CircularProgress
+} from '@mui/material'
 import DrawerRefine from './components/DrawerRefine'
 import DrawerPredict from './components/DrawerPredict'
 import DrawerDeconv from './components/DrawerDeconv'
@@ -31,6 +39,13 @@ const App = () => {
     const [deconvMessages, setDeconvMessages] = useState([])
     const [maskMessages, setMaskMessages] = useState([])
     const [predictMessages, setPredictMessages] = useState([])
+    const [runningProcesses, setRunningProcesses] = useState({
+        prepare_star: false,
+        refine: false,
+        deconv: false,
+        make_mask: false,
+        predict: false
+    })
 
     const [starName, setStarName] = useState('')
     // const [JsonData, setJsonData] = useState('')
@@ -108,6 +123,30 @@ const App = () => {
         window.api.onPythonStderr(handleIncomingMessage)
         window.api.onPythonStdout(handleIncomingMessage)
 
+        window.api.onPythonRunning((data) => {
+            setRunningProcesses((prevState) => {
+                if (data.cmd in prevState) {
+                    return {
+                        ...prevState,
+                        [data.cmd]: true
+                    }
+                }
+                return prevState
+            })
+        })
+
+        window.api.onPythonClosed((data) => {
+            setRunningProcesses((prevState) => {
+                if (data.cmd in prevState) {
+                    return {
+                        ...prevState,
+                        [data.cmd]: false
+                    }
+                }
+                return prevState
+            })
+        })
+
         // // Cleanup listeners on unmount
         // return () => {
         //     window.api.offPythonStderr(handleIncomingMessage)
@@ -181,6 +220,9 @@ const App = () => {
                                     sx={selectedStyle}
                                     onClick={(event) => handleSecondaryMenuClick(event, 0)}
                                 >
+                                    {runningProcesses['prepare_star'] === true ? (
+                                        <CircularProgress size={20} color="inherit" />
+                                    ) : null}
                                     <ListItemText primary="Prepare" />
                                     <IconButton
                                         onClick={() => setPrepareDrawerOpen(true)}
@@ -213,6 +255,9 @@ const App = () => {
                                     sx={selectedStyle}
                                     onClick={(event) => handleSecondaryMenuClick(event, 1)}
                                 >
+                                    {runningProcesses['deconv'] === true ? (
+                                        <CircularProgress size={20} color="inherit" />
+                                    ) : null}
                                     <ListItemText primary="Deconvolve" />
                                     <IconButton
                                         onClick={() => setDeconvDrawerOpen(true)}
@@ -245,6 +290,9 @@ const App = () => {
                                     sx={selectedStyle}
                                     onClick={(event) => handleSecondaryMenuClick(event, 2)}
                                 >
+                                    {runningProcesses['make_mask'] === true ? (
+                                        <CircularProgress size={20} color="inherit" />
+                                    ) : null}
                                     <ListItemText primary="Create Mask" />
                                     <IconButton
                                         onClick={() => setMaskDrawerOpen(true)}
@@ -272,6 +320,9 @@ const App = () => {
                                     sx={selectedStyle}
                                     onClick={(event) => handleSecondaryMenuClick(event, 3)}
                                 >
+                                    {runningProcesses['refine'] === true ? (
+                                        <CircularProgress size={20} color="inherit" />
+                                    ) : null}
                                     <ListItemText primary="Refine" />
                                     <IconButton
                                         onClick={() => setRefineDrawerOpen(true)}
@@ -304,6 +355,9 @@ const App = () => {
                                     sx={selectedStyle}
                                     onClick={(event) => handleSecondaryMenuClick(event, 4)}
                                 >
+                                    {runningProcesses['predict'] === true ? (
+                                        <CircularProgress size={20} color="inherit" />
+                                    ) : null}
                                     <ListItemText primary="Predict" />
                                     <IconButton
                                         onClick={() => setPredictDrawerOpen(true)}

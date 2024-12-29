@@ -134,6 +134,8 @@ ipcMain.on('run', (event, data) => {
         stdio: ['ignore', 'pipe', 'pipe'] // Ignore stdin, keep stdout/stderr
     }) // Corrected the split
 
+    event.sender.send('python-running', { cmd: cmd, output: 'running' })
+
     // Capture and print stdout in real time
     pythonProcess.stdout.on('data', (data) => {
         event.sender.send('python-stdout', { cmd: cmd, output: data.toString() })
@@ -158,6 +160,7 @@ ipcMain.on('run', (event, data) => {
             })
         }
         pythonProcess = null // Reset the reference when the process ends
+        event.sender.send('python-closed', { cmd: cmd, output: 'closed' })
     })
 })
 ipcMain.on('kill-python', (event) => {

@@ -17,6 +17,17 @@ const api = {
         ipcRenderer.send('run', data)
     },
     // Listen for Python stderr messages
+    onPythonRunning: (callback) => {
+        ipcRenderer.on('python-running', (event, data) => {
+            callback(data)
+        })
+    },
+    onPythonClosed: (callback) => {
+        ipcRenderer.on('python-closed', (event, data) => {
+            callback(data)
+        })
+    },
+    // Listen for Python stderr messages
     onPythonStderr: (callback) => {
         ipcRenderer.on('python-stderr', (event, data) => {
             callback(data)
