@@ -34,8 +34,8 @@ function toCommand(data) {
     return { cmd, result }
 }
 
-const inQueueList = [] // List for queued processes
-const notInQueueList = [] // List for non-queued processes
+let inQueueList = [] // List for queued processes
+let notInQueueList = [] // List for non-queued processes
 let currentInQueueProcess = null // Track the current inQueue process being executed
 ipcMain.handle('get-jobs-list', () => {
     console.log('main jobs', inQueueList)
@@ -84,7 +84,7 @@ function processInQueue() {
     if (nextProcess) {
         currentInQueueProcess = nextProcess
         currentInQueueProcess.status = 'running'
-        runProcess(nextProcess.cmd, nextProcess.result, nextProcess.event, () => {
+        runProcess(nextProcess, () => {
             currentInQueueProcess = null // Clear when finished
             inQueueList.shift()
             processInQueue() // Process the next inQueue job
@@ -97,7 +97,7 @@ function processNotInQueue() {
     let l = notInQueueList.length
     if (l > 0) {
         const nextProcess = notInQueueList[0] //.shift()
-        runProcess(nextProcess.cmd, nextProcess.result, nextProcess.event, () => {
+        runProcess(nextProcess, () => {
             nextProcess == null
             notInQueueList.shift()
         })
@@ -105,45 +105,79 @@ function processNotInQueue() {
 }
 
 // Function to spawn and handle a Python process
-function runProcess(cmd, result, event, callback) {
-    console.log(`Running command: isonet.py ${result}`)
+function runProcess(processItem, callback) {
+    console.log(`Running command: isonet.py ${processItem.result}`)
 
     // Spawn the Python process
-    const pythonProcess = spawn('isonet.py', [...result.split(' ')], {
+    const pythonProcess = spawn('isonet.py', [...processItem.result.split(' ')], {
         detached: true,
         stdio: ['ignore', 'pipe', 'pipe']
     })
 
-    event.sender.send('python-running', { cmd, output: 'running' })
+    processItem.event.sender.send('python-running', { cmd: processItem.cmd, output: 'running' })
 
     // Capture stdout
     pythonProcess.stdout.on('data', (data) => {
-        event.sender.send('python-stdout', { cmd, output: data.toString() })
+        processItem.event.sender.send('python-stdout', {
+            cmd: processItem.cmd,
+            output: data.toString()
+        })
     })
-
+    processItem.pid = pythonProcess.pid
     // Capture stderr
     pythonProcess.stderr.on('data', (data) => {
-        event.sender.send('python-stderr', { cmd, output: data.toString() })
+        processItem.event.sender.send('python-stderr', {
+            cmd: processItem.cmd,
+            output: data.toString()
+        })
     })
 
     // Handle process close
     pythonProcess.on('close', (code) => {
-        console.log(`Python process for ${cmd} exited with code ${code}`)
+        console.log(`Python process for ${processItem.cmd} exited with code ${code}`)
 
-        if (code === 0 && (cmd === 'prepare_star' || cmd === 'star2json')) {
+        if (code === 0 && (processItem.cmd === 'prepare_star' || processItem.cmd === 'star2json')) {
             fs.readFile('.to_node.json', 'utf8', (err, data) => {
                 if (!err) {
                     const jsonData = data.split('\n').map((line) => JSON.parse(line))
-                    event.sender.send('json-star', { cmd: 'prepare_star', output: jsonData })
+                    processItem.event.sender.send('json-star', {
+                        cmd: 'prepare_star',
+                        output: jsonData
+                    })
                 }
             })
         }
 
-        event.sender.send('python-closed', { cmd, output: 'closed' })
+        processItem.event.sender.send('python-closed', { cmd: processItem.cmd, output: 'closed' })
         if (callback) callback() // Notify that the process has finished
     })
 }
 
+ipcMain.on('remove-job', (event, result) => {
+    const jobIndex = inQueueList.findIndex(
+        (item) => item.result === result && item.status === 'queued'
+    )
+
+    if (jobIndex !== -1) {
+        // Job found, remove it
+        inQueueList.splice(jobIndex, 1)
+        event.reply('remove-job-response', true) // Send success response
+    } else {
+        event.reply('remove-job-response', false) // Send failure response
+    }
+})
+
+ipcMain.on('kill-job', (event, pid) => {
+    console.log(`Attempting to kill process group with PID: ${pid}`)
+    try {
+        process.kill(-pid, 'SIGINT') // Kill entire process group
+        console.log('Python process group killed')
+        event.reply('kill-job-response', true) // Send success response
+    } catch (err) {
+        console.error('Failed to kill Python process group:', err)
+        event.reply('kill-job-response', false) // Send failure response
+    }
+})
 // ipcMain.on('run', (event, data) => {
 //     const { cmd, result } = toCommand(data)
 //     if (data.hasOwnProperty('only_print') && data['only_print'] === true) {

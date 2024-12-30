@@ -38,9 +38,33 @@ const api = {
             callback(data)
         })
     },
-    killPython: () => {
-        ipcRenderer.send('kill-python')
+    killJob: (pid) => {
+        return new Promise((resolve, reject) => {
+            ipcRenderer.once('kill-job-response', (event, success) => {
+                if (success) {
+                    resolve() // Resolve the promise if the process was killed
+                } else {
+                    reject(new Error('Failed to kill job')) // Reject if there was an error
+                }
+            })
+
+            ipcRenderer.send('kill-job', pid) // Send the kill request
+        })
     },
+    removeJobFromQueue: (result) => {
+        return new Promise((resolve, reject) => {
+            ipcRenderer.once('remove-job-response', (event, success) => {
+                if (success) {
+                    resolve() // Resolve the promise when the job is removed
+                } else {
+                    reject(new Error('Failed to remove job from queue')) // Reject the promise if there's an error
+                }
+            })
+
+            ipcRenderer.send('remove-job', result) // Send the job removal request
+        })
+    },
+
     onJson: (callback) => {
         ipcRenderer.on('json-star', (event, data) => {
             console.log(data)

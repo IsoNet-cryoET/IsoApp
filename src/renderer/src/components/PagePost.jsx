@@ -3,7 +3,7 @@ import React from 'react'
 const PagePost = () => {
     return (
         <div>
-            <h3>Page C</h3>
+            <h3>under construction</h3>
         </div>
     )
 }

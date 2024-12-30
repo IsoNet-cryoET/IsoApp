@@ -94,20 +94,6 @@ ipcMain.on('run', (event, data) => {
     handleProcess(event, data)
 })
 
-ipcMain.on('kill-python', (event) => {
-    if (pythonProcess) {
-        console.log(`Attempting to kill Python process group with PID: ${pythonProcess.pid}`)
-        try {
-            process.kill(-pythonProcess.pid, 'SIGINT') // Kill entire process group
-            console.log('Python process group killed')
-        } catch (err) {
-            console.error('Failed to kill Python process group:', err)
-        }
-        pythonProcess = null
-    } else {
-        console.log('No Python process is running')
-    }
-})
 // window adaptation
 app.whenReady().then(() => {
     electronApp.setAppUserModelId('com.electron')
