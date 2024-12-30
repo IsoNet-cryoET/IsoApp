@@ -46,7 +46,19 @@ const api = {
             console.log(data)
             callback(data)
         })
+    },
+    onFetchJobs: async () => {
+        try {
+            const jobs = await ipcRenderer.invoke('get-jobs-list')
+            console.log('preload jobs', jobs)
+
+            return jobs
+        } catch (error) {
+            console.error('Error fetching jobs:', error)
+            return null // Handle error gracefully
+        }
     }
+
     // offJson: (callback) => {
     //     ipcRenderer.removeListener('json-star', callback)
     // }

@@ -7,6 +7,7 @@ import {
     IconButton,
     ListItemButton,
     Backdrop,
+    Box,
     CircularProgress
 } from '@mui/material'
 import DrawerRefine from './components/DrawerRefine'
@@ -24,6 +25,8 @@ import PagePredict from './components/PagePredict'
 import PageMask from './components/PageMask'
 import PageDeconv from './components/PageDeconv'
 import PagePost from './components/PagePost'
+import PageJobs from './components/PageJobs'
+
 import { mergeMsg, processMessage } from './utils/utils'
 import { ConnectedTvOutlined } from '@mui/icons-material'
 
@@ -155,7 +158,7 @@ const App = () => {
     const [selectedSecondaryMenu, setSelectedSecondaryMenu] = useState(0)
 
     const Contents = [
-        [PagePrepare, PageDeconv, PageMask, PageRefine, PagePredict, PagePost],
+        [PagePrepare, PageDeconv, PageMask, PageRefine, PagePredict, PagePost, PageJobs],
         [null, null]
     ]
     const CurrentComponent = Contents[selectedPrimaryMenu][selectedSecondaryMenu]
@@ -382,6 +385,21 @@ const App = () => {
                                     onClick={(event) => handleSecondaryMenuClick(event, 5)}
                                 >
                                     <ListItemText primary="Postprocess" />
+                                </ListItemButton>
+                            </ListItem>
+
+                            <ListItem
+                                disablePadding
+                                // sx={{
+                                //     '&:hover': { backgroundColor: '#eaebef' }
+                                // }}
+                            >
+                                <ListItemButton
+                                    selected={selectedSecondaryMenu === 6} // Unique index for the new item
+                                    sx={{ ...selectedStyle, bottom: 0, position: 'static' }}
+                                    onClick={(event) => handleSecondaryMenuClick(event, 6)} // Ensure the click handler works for the new item
+                                >
+                                    <ListItemText primary="Jobs viewer" />
                                 </ListItemButton>
                             </ListItem>
                         </List>

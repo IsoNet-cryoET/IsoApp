@@ -1,4 +1,6 @@
 const { spawn } = require('child_process')
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+const fs = require('fs')
 
 function toCommand(data) {
     let result = ''
@@ -35,7 +37,18 @@ function toCommand(data) {
 const inQueueList = [] // List for queued processes
 const notInQueueList = [] // List for non-queued processes
 let currentInQueueProcess = null // Track the current inQueue process being executed
+ipcMain.handle('get-jobs-list', () => {
+    console.log('main jobs', inQueueList)
+    console.log('main jobs', notInQueueList)
 
+    const sanitizedInQueueList = inQueueList.map(({ event, ...rest }) => rest)
+    const sanitizedNotInQueueList = notInQueueList.map(({ event, ...rest }) => rest)
+
+    return {
+        inQueueList: sanitizedInQueueList,
+        notInQueueList: sanitizedNotInQueueList
+    }
+})
 // Function to process the inQueue list
 export function handleProcess(event, data) {
     const { cmd, result } = toCommand(data)
@@ -43,10 +56,14 @@ export function handleProcess(event, data) {
         event.sender.send('python-stdout', { cmd: cmd, output: result })
     } else {
         if (data.inqueue) {
-            inQueueList.push({ cmd, result, event })
+            console.log('focus1', inQueueList)
+
+            inQueueList.push({ cmd, result, event, status: 'queued' })
+            console.log('focus2', inQueueList)
+
             processInQueue()
         } else {
-            notInQueueList.push({ cmd, result, event })
+            notInQueueList.push({ cmd, result, event, status: 'running' })
             processNotInQueue()
         }
     }
@@ -54,18 +71,22 @@ export function handleProcess(event, data) {
 
 function processInQueue() {
     if (currentInQueueProcess) {
-        inQueueList[0].event.sender.send('python-stdout', {
-            cmd: inQueueList[0].cmd,
-            output: 'Queued: ' + inQueueList[0].result
+        let l = inQueueList.length
+
+        inQueueList[l - 1].event.sender.send('python-stdout', {
+            cmd: inQueueList[l - 1].cmd,
+            output: 'Queued: ' + inQueueList[l - 1].result
         })
         return
     }
 
-    const nextProcess = inQueueList.shift()
+    const nextProcess = inQueueList[0] //.shift()
     if (nextProcess) {
         currentInQueueProcess = nextProcess
+        currentInQueueProcess.status = 'running'
         runProcess(nextProcess.cmd, nextProcess.result, nextProcess.event, () => {
             currentInQueueProcess = null // Clear when finished
+            inQueueList.shift()
             processInQueue() // Process the next inQueue job
         })
     }
@@ -73,9 +94,13 @@ function processInQueue() {
 
 // Function to process the notInQueue list
 function processNotInQueue() {
-    while (notInQueueList.length > 0) {
-        const nextProcess = notInQueueList.shift()
-        runProcess(nextProcess.cmd, nextProcess.result, nextProcess.event)
+    let l = notInQueueList.length
+    if (l > 0) {
+        const nextProcess = notInQueueList[0] //.shift()
+        runProcess(nextProcess.cmd, nextProcess.result, nextProcess.event, () => {
+            nextProcess == null
+            notInQueueList.shift()
+        })
     }
 }
 

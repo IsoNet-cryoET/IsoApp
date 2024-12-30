@@ -7,15 +7,15 @@ import DataTable from './DataTable'
 const PagePrepare = (props) => {
     const [JsonData, setJsonData] = useState('')
 
-    useEffect(() => {
-        const handleJsonUpdate = (data) => {
-            setJsonData(data.output) // Update the table data
-        }
-        window.api.onJson(handleJsonUpdate)
-        // return () => {
-        //     window.api.offJson(handleJsonUpdate)
-        // }
-    }, [])
+    // useEffect(() => {
+    const handleJsonUpdate = (data) => {
+        setJsonData(data.output) // Update the table data
+    }
+    window.api.onJson(handleJsonUpdate)
+    // return () => {
+    //     window.api.offJson(handleJsonUpdate)
+    // }
+    // }, [])
 
     useEffect(() => {
         api.run({

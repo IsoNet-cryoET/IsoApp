@@ -23,12 +23,15 @@ const DataTable = ({ jsonData, star_name }) => {
         setRows(flattenData(jsonData))
     }, [jsonData])
 
-    useEffect(() => {
-        convertToJson()
-    }, [rows])
+    // useEffect(() => {
+    //     convertToJson()
+    // }, [rows])
 
     const columns = Object.keys(jsonData[0]).filter((col) => col !== 'index')
 
+    const handleCellBlur = () => {
+        convertToJson()
+    }
     const handleCellChange = (rowIndex, columnName, value) => {
         const updatedRows = [...rows]
         updatedRows[rowIndex][columnName] = value
@@ -78,6 +81,7 @@ const DataTable = ({ jsonData, star_name }) => {
                                             onChange={(e) =>
                                                 handleCellChange(rowIndex, col, e.target.value)
                                             }
+                                            onBlur={handleCellBlur} // Save on blur
                                             variant="outlined"
                                             size="small"
                                         />
