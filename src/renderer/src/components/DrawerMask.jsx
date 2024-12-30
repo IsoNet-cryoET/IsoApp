@@ -18,13 +18,14 @@ import {
 } from '@mui/material'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import CleaningServicesIcon from '@mui/icons-material/CleaningServices'
 
 const DrawerMask = ({ open, onClose, onSubmit }) => {
     const [formData, setFormData] = useState({
         command: 'make_mask',
         star_file: 'tomograms.star',
         output_dir: './mask',
-        input_column: 'rlnDeconvTomoName',
+        input_column: 'rlnTomoName',
         patch_size: 4,
         density_percentage: 50,
         std_percentage: 50,

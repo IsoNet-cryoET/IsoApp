@@ -3,6 +3,7 @@ import { renderContent } from './log_handler'
 import { Box, TextField, Button } from '@mui/material'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import DataTable from './DataTable'
+import CleaningServicesIcon from '@mui/icons-material/CleaningServices'
 
 const PagePrepare = (props) => {
     const [JsonData, setJsonData] = useState('')
@@ -24,7 +25,9 @@ const PagePrepare = (props) => {
             star_file: props.starName
         })
     }, [])
-
+    const handleClear = () => {
+        props.setPrepareMessages([])
+    }
     const handleFileSelect = async (property) => {
         try {
             const filePath = await api.selectFile(property)
@@ -59,6 +62,15 @@ const PagePrepare = (props) => {
                     disabled
                     sx={{ height: '56px' }} // Set the TextField's height to match the button
                 />
+                <Button
+                    variant="outlined"
+                    color="primary"
+                    startIcon={<CleaningServicesIcon />}
+                    onClick={() => handleClear()}
+                    sx={{ height: '56px' }} // Ensure the button has a height
+                >
+                    clear screen
+                </Button>
             </Box>
             <DataTable jsonData={JsonData} star_name={props.starName} />
             {renderContent(props.prepareMessages)}

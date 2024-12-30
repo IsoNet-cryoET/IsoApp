@@ -439,13 +439,29 @@ const App = () => {
                                     setPrepareMessages
                                 }
                             } else if (CurrentComponent === PageRefine) {
-                                componentProps = { ...componentProps, refineMessages }
+                                componentProps = {
+                                    ...componentProps,
+                                    refineMessages,
+                                    setRefineMessages
+                                }
                             } else if (CurrentComponent === PagePredict) {
-                                componentProps = { ...componentProps, predictMessages }
+                                componentProps = {
+                                    ...componentProps,
+                                    predictMessages,
+                                    setPredictMessages
+                                }
                             } else if (CurrentComponent === PageMask) {
-                                componentProps = { ...componentProps, maskMessages }
+                                componentProps = {
+                                    ...componentProps,
+                                    maskMessages,
+                                    setMaskMessages
+                                }
                             } else if (CurrentComponent === PageDeconv) {
-                                componentProps = { ...componentProps, deconvMessages }
+                                componentProps = {
+                                    ...componentProps,
+                                    deconvMessages,
+                                    setDeconvMessages
+                                }
                             }
 
                             return <CurrentComponent {...componentProps} />
