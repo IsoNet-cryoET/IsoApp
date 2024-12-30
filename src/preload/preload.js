@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-
+ipcRenderer.setMaxListeners(100)
 // Custom APIs for renderer
 const api = {
     selectFile(property) {
