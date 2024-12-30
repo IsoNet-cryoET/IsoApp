@@ -33,7 +33,8 @@ const DrawerPredict = ({ open, onClose, onSubmit }) => {
         tomo_idx: 'all',
         even_odd_input: true,
         split_top_bottom_halves: false,
-        only_print: true
+        only_print: true,
+        inqueue: true
     })
 
     // 处理表单字段变化
@@ -49,8 +50,12 @@ const DrawerPredict = ({ open, onClose, onSubmit }) => {
         }))
     }
     const handleSubmit = (signal) => {
-        handleChange('only_print', signal)
-        onSubmit(formData)
+        const updatedFormData = {
+            ...formData,
+            only_print: signal.onlyPrint,
+            inqueue: signal.inqueue
+        }
+        onSubmit(updatedFormData)
         onClose()
     }
 
@@ -200,16 +205,25 @@ const DrawerPredict = ({ open, onClose, onSubmit }) => {
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    onClick={() => handleSubmit(false)}
+                    onClick={() => handleSubmit({ onlyPrint: false, inqueue: true })}
                 >
-                    Submit
+                    Submit (in queue)
                 </Button>
                 <Button
                     variant="contained"
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    onClick={() => handleSubmit(true)}
+                    onClick={() => handleSubmit({ onlyPrint: false, inqueue: false })}
+                >
+                    Submit (run immediately)
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ marginTop: 2 }}
+                    onClick={() => handleSubmit({ onlyPrint: true, inqueue: true })}
                 >
                     Print Command
                 </Button>

@@ -30,7 +30,8 @@ const DrawerMask = ({ open, onClose, onSubmit }) => {
         std_percentage: 50,
         z_crop: 0.2,
         tomo_idx: 'all',
-        only_print: true
+        only_print: true,
+        inqueue: true
     })
 
     // 处理表单字段变化
@@ -45,10 +46,13 @@ const DrawerMask = ({ open, onClose, onSubmit }) => {
             [field]: folderPath
         }))
     }
-
     const handleSubmit = (signal) => {
-        handleChange('only_print', signal)
-        onSubmit(formData)
+        const updatedFormData = {
+            ...formData,
+            only_print: signal.onlyPrint,
+            inqueue: signal.inqueue
+        }
+        onSubmit(updatedFormData)
         onClose()
     }
 
@@ -161,16 +165,25 @@ const DrawerMask = ({ open, onClose, onSubmit }) => {
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    onClick={() => handleSubmit(false)}
+                    onClick={() => handleSubmit({ onlyPrint: false, inqueue: true })}
                 >
-                    Submit
+                    Submit (in queue)
                 </Button>
                 <Button
                     variant="contained"
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    onClick={() => handleSubmit(true)}
+                    onClick={() => handleSubmit({ onlyPrint: false, inqueue: false })}
+                >
+                    Submit (run immediately)
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ marginTop: 2 }}
+                    onClick={() => handleSubmit({ onlyPrint: true, inqueue: true })}
                 >
                     Print Command
                 </Button>

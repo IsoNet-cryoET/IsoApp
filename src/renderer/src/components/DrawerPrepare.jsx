@@ -37,7 +37,8 @@ const DrawerPrepare = ({ open, onClose, onSubmit }) => {
         tilt_step: 3,
         create_average: true,
         number_subtomos: 1000,
-        only_print: true
+        only_print: true,
+        inqueue: true
     })
 
     const handleChange = (field, value) => {
@@ -61,8 +62,12 @@ const DrawerPrepare = ({ open, onClose, onSubmit }) => {
     }
 
     const handleSubmit = (signal) => {
-        handleChange('only_print', signal)
-        onSubmit(formData)
+        const updatedFormData = {
+            ...formData,
+            only_print: signal.onlyPrint,
+            inqueue: signal.inqueue
+        }
+        onSubmit(updatedFormData)
         onClose()
     }
     const handleTabChange = (event, newValue) => {
@@ -290,22 +295,30 @@ const DrawerPrepare = ({ open, onClose, onSubmit }) => {
                     margin="normal"
                 />
 
-                {/* Submit Button */}
                 <Button
                     variant="contained"
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    onClick={() => handleSubmit(false)}
+                    onClick={() => handleSubmit({ onlyPrint: false, inqueue: true })}
                 >
-                    Submit
+                    Submit (in queue)
                 </Button>
                 <Button
                     variant="contained"
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    onClick={() => handleSubmit(true)}
+                    onClick={() => handleSubmit({ onlyPrint: false, inqueue: false })}
+                >
+                    Submit (run immediately)
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ marginTop: 2 }}
+                    onClick={() => handleSubmit({ onlyPrint: true, inqueue: true })}
                 >
                     Print Command
                 </Button>

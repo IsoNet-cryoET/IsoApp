@@ -1,11 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-// import { run_python } from './python'
+import { handleProcess } from './process_handler'
 const { spawn } = require('child_process')
 const fs = require('fs')
-
-let pythonProcess = null // To hold the reference of the running Python process
 
 function createWindow() {
     const mainWindow = new BrowserWindow({
@@ -43,42 +41,10 @@ function createWindow() {
     // mainWindow.webContents.openDevTools()
 }
 
-function toCommand(data) {
-    let result = ''
-    let cmd = ''
-    for (const key in data) {
-        if (data.hasOwnProperty(key)) {
-            let value = data[key]
-            if (value === true) {
-                value = 'True'
-            } else if (value === false) {
-                value = 'False'
-            }
-
-            if (key === 'command') {
-                // Prepend the command value
-                result = `${value}${result}`
-                cmd = `${value}`
-            } else if (
-                key === 'even_odd_input' ||
-                key == 'split_top_bottom_halves' ||
-                key == 'only_print'
-            ) {
-                // Do nothing for 'even_odd_input'
-            } else {
-                // Append key-value pair in the format "--key value"
-                result += ` --${key} ${value}`
-            }
-        }
-    }
-    return { cmd, result }
-}
-
 ipcMain.handle('select-file', async (_, property) => {
     const result = await dialog.showOpenDialog({
         properties: [property]
     })
-
     if (!result.canceled) {
         return result.filePaths[0]
     }
@@ -87,6 +53,7 @@ ipcMain.handle('select-file', async (_, property) => {
 
 ipcMain.on('update_star', (event, data) => {
     const filePath = '.to_star.json'
+    let updateStarProcess = null // To hold the reference of the running Python process
 
     fs.writeFile(filePath, JSON.stringify(data.convertedJson, null, 2), (err) => {
         if (err) {
@@ -98,7 +65,7 @@ ipcMain.on('update_star', (event, data) => {
         }
     })
 
-    pythonProcess = spawn(
+    updateStarProcess = spawn(
         'isonet.py',
         ['json2star', '--json_file', filePath, '--star_name', data.star_name],
         {
@@ -108,64 +75,25 @@ ipcMain.on('update_star', (event, data) => {
     ) // Corrected the split
     let cmd = 'prepare_star'
     // Capture and print stdout in real time
-    pythonProcess.stdout.on('data', (data) => {
+    updateStarProcess.stdout.on('data', (data) => {
         event.sender.send('python-stdout', { cmd: cmd, output: data.toString() })
     })
 
-    pythonProcess.stderr.on('data', (data) => {
+    updateStarProcess.stderr.on('data', (data) => {
         event.sender.send('python-stderr', { cmd: cmd, output: data.toString() })
     })
 
     // Handle process close event
-    pythonProcess.on('close', (code) => {
+    updateStarProcess.on('close', (code) => {
         console.log(`Python process exited with code ${code}`)
-        pythonProcess = null // Reset the reference when the process ends
+        updateStarProcess = null // Reset the reference when the process ends
     })
 })
 
 ipcMain.on('run', (event, data) => {
-    const { cmd, result } = toCommand(data)
-    if (data.hasOwnProperty('only_print') && data['only_print'] === true) {
-        event.sender.send('python-stdout', { cmd: cmd, output: result })
-    } else {
-        console.log(`isonet.py ${result}`)
-
-        // Spawn the Python process
-        pythonProcess = spawn('isonet.py', [...result.split(' ')], {
-            detached: true, // Create a new process group
-            stdio: ['ignore', 'pipe', 'pipe'] // Ignore stdin, keep stdout/stderr
-        }) // Corrected the split
-
-        event.sender.send('python-running', { cmd: cmd, output: 'running' })
-
-        // Capture and print stdout in real time
-        pythonProcess.stdout.on('data', (data) => {
-            event.sender.send('python-stdout', { cmd: cmd, output: data.toString() })
-        })
-
-        pythonProcess.stderr.on('data', (data) => {
-            event.sender.send('python-stderr', { cmd: cmd, output: data.toString() })
-        })
-
-        // Handle process close event
-        pythonProcess.on('close', (code) => {
-            console.log(`Python process exited with code ${code}`)
-            if (code === 0 && (cmd === 'prepare_star' || cmd === 'star2json')) {
-                fs.readFile('.to_node.json', 'utf8', (err, data) => {
-                    if (err) {
-                        console.error('Error reading JSON:', err)
-                        return
-                    }
-                    const jsonData = data.split('\n').map((line) => JSON.parse(line)) // Parsing each line as an individual object
-                    event.sender.send('json-star', { cmd: 'prepare_star', output: jsonData })
-                    //console.log(jsonData) // Logs an array of objects
-                })
-            }
-            pythonProcess = null // Reset the reference when the process ends
-            event.sender.send('python-closed', { cmd: cmd, output: 'closed' })
-        })
-    }
+    handleProcess(event, data)
 })
+
 ipcMain.on('kill-python', (event) => {
     if (pythonProcess) {
         console.log(`Attempting to kill Python process group with PID: ${pythonProcess.pid}`)

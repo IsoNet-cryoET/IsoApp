@@ -46,7 +46,6 @@ const App = () => {
         make_mask: false,
         predict: false
     })
-    const [gpuQueue, setGpuQueue] = useState([])
 
     const [starName, setStarName] = useState('')
     // const [JsonData, setJsonData] = useState('')
@@ -54,7 +53,7 @@ const App = () => {
     const handleSubmitPrepare = (data) => {
         try {
             setStarName(data.star_name)
-            setPrepareMessages(() => [])
+            // setPrepareMessages(() => [])
             api.run(data)
         } catch (error) {
             console.error('Error submitting form:', error)
@@ -64,7 +63,7 @@ const App = () => {
 
     const handleSubmitRefine = (data) => {
         try {
-            setRefineMessages(() => [])
+            // setRefineMessages(() => [])
             api.run(data)
         } catch (error) {
             console.error('Error submitting form:', error)
@@ -74,7 +73,7 @@ const App = () => {
 
     const handleSubmitDeconv = (data) => {
         try {
-            setDeconvMessages(() => [])
+            // setDeconvMessages(() => [])
             api.run(data)
         } catch (error) {
             console.error('Error submitting form:', error)
@@ -84,7 +83,7 @@ const App = () => {
 
     const handleSubmitPredict = (data) => {
         try {
-            setPredictMessages(() => [])
+            // setPredictMessages(() => [])
             api.run(data)
         } catch (error) {
             console.error('Error submitting form:', error)
@@ -94,7 +93,7 @@ const App = () => {
 
     const handleSubmitMask = (data) => {
         try {
-            setMaskMessages(() => [])
+            // setMaskMessages(() => [])
             api.run(data)
         } catch (error) {
             console.error('Error submitting form:', error)
