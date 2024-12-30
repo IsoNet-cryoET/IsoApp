@@ -5,6 +5,7 @@ const fs = require('fs')
 function toCommand(data) {
     let result = ''
     let cmd = ''
+    let output_dir = '.'
     for (const key in data) {
         if (data.hasOwnProperty(key)) {
             let value = data[key]
@@ -28,10 +29,13 @@ function toCommand(data) {
             } else {
                 // Append key-value pair in the format "--key value"
                 result += ` --${key} ${value}`
+                if (key === 'output_dir') {
+                    output_dir = value
+                }
             }
         }
     }
-    return { cmd, result }
+    return { cmd, result, output_dir }
 }
 
 let inQueueList = [] // List for queued processes
@@ -51,19 +55,15 @@ ipcMain.handle('get-jobs-list', () => {
 })
 // Function to process the inQueue list
 export function handleProcess(event, data) {
-    const { cmd, result } = toCommand(data)
+    const { cmd, result, output_dir } = toCommand(data)
     if (data.hasOwnProperty('only_print') && data['only_print'] === true) {
         event.sender.send('python-stdout', { cmd: cmd, output: result })
     } else {
         if (data.inqueue) {
-            console.log('focus1', inQueueList)
-
-            inQueueList.push({ cmd, result, event, status: 'queued' })
-            console.log('focus2', inQueueList)
-
+            inQueueList.push({ cmd, result, output_dir, event, status: 'queued' })
             processInQueue()
         } else {
-            notInQueueList.push({ cmd, result, event, status: 'running' })
+            notInQueueList.push({ cmd, result, output_dir, event, status: 'running' })
             processNotInQueue()
         }
     }
@@ -115,26 +115,32 @@ function runProcess(processItem, callback) {
     })
 
     processItem.event.sender.send('python-running', { cmd: processItem.cmd, output: 'running' })
-
-    // Capture stdout
+    const logStream = fs.createWriteStream(processItem.output_dir + '/log.txt', { flags: 'a' })
+    logStream.write(`Command: isonet.py ${processItem.result}\n`)
+    // logStream.write(`[STDOUT] ${output}`) // Write stdout to log.txt
     pythonProcess.stdout.on('data', (data) => {
+        const output = data.toString()
         processItem.event.sender.send('python-stdout', {
             cmd: processItem.cmd,
-            output: data.toString()
+            output: output
         })
+        logStream.write(`${output}`) // Write stdout to log.txt
     })
     processItem.pid = pythonProcess.pid
     // Capture stderr
     pythonProcess.stderr.on('data', (data) => {
+        const output = data.toString()
         processItem.event.sender.send('python-stderr', {
             cmd: processItem.cmd,
-            output: data.toString()
+            output: output
         })
+        logStream.write(`${output}`) // Write stderr to log.txt
     })
 
     // Handle process close
     pythonProcess.on('close', (code) => {
         console.log(`Python process for ${processItem.cmd} exited with code ${code}`)
+        logStream.write(`Process exited with code ${code}\n`) // Log the exit code
 
         if (code === 0 && (processItem.cmd === 'prepare_star' || processItem.cmd === 'star2json')) {
             fs.readFile('.to_node.json', 'utf8', (err, data) => {
@@ -149,6 +155,7 @@ function runProcess(processItem, callback) {
         }
 
         processItem.event.sender.send('python-closed', { cmd: processItem.cmd, output: 'closed' })
+        logStream.end()
         if (callback) callback() // Notify that the process has finished
     })
 }
