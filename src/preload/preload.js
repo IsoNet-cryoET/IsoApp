@@ -16,6 +16,9 @@ const api = {
     run: (data) => {
         ipcRenderer.send('run', data)
     },
+    view: (file) => {
+        ipcRenderer.send('view', file)
+    },
     // Listen for Python stderr messages
     onPythonRunning: (callback) => {
         ipcRenderer.on('python-running', (event, data) => {

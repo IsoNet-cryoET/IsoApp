@@ -94,6 +94,20 @@ ipcMain.on('run', (event, data) => {
     handleProcess(event, data)
 })
 
+ipcMain.on('view', (event, file) => {
+    let viewFile = null
+    viewFile = spawn('3dmod', [file], {
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe']
+    })
+    viewFile.stdout.on('data', (data) => {
+        event.sender.send('python-stdout', { cmd: 'prepare_star', output: data.toString() })
+    })
+
+    viewFile.stderr.on('data', (data) => {
+        event.sender.send('python-stderr', { cmd: 'prepare_star', output: data.toString() })
+    })
+})
 // window adaptation
 app.whenReady().then(() => {
     electronApp.setAppUserModelId('com.electron')
